@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32104.313
+MinimumVisualStudioVersion = 15.0.26124.0
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnetCampus.AppHost", "src\dotnetCampus.AppHost\dotnetCampus.AppHost.csproj", "{F7ED61F4-920C-49EB-8DC1-74B2BE6AF272}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EC7FBE50-7CC5-48C4-A2B0-3767F6451588}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{5D6603D7-B735-46ED-95AC-36395D5B0860}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\dotnet-build.yml = .github\workflows\dotnet-build.yml
+		.github\workflows\nuget-master-publish.yml = .github\workflows\nuget-master-publish.yml
+		.github\workflows\nuget-tag-publish.yml = .github\workflows\nuget-tag-publish.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{B7D3B579-79DA-4EF2-911D-538ADC8B85FB}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		build\Version.props = build\Version.props
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7ED61F4-920C-49EB-8DC1-74B2BE6AF272}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7ED61F4-920C-49EB-8DC1-74B2BE6AF272}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7ED61F4-920C-49EB-8DC1-74B2BE6AF272}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7ED61F4-920C-49EB-8DC1-74B2BE6AF272}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5D6603D7-B735-46ED-95AC-36395D5B0860} = {EC7FBE50-7CC5-48C4-A2B0-3767F6451588}
+		{B7D3B579-79DA-4EF2-911D-538ADC8B85FB} = {EC7FBE50-7CC5-48C4-A2B0-3767F6451588}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6D3BFC9F-5F3F-40E0-B0DD-F2C7424E3089}
+	EndGlobalSection
+EndGlobal

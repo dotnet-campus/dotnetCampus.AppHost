@@ -1,0 +1,17 @@
+<Project>
+  <Import Project="build\Version.props" />
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)</PackageOutputPath>
+    <Company>dotnet campus（.NET 职业技术学院）</Company>
+
+    <Authors>dotnet-campus</Authors>
+    <RepositoryUrl>https://github.com/dotnet-campus/dotnetCampus.AppHost</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/dotnet-campus/dotnetCampus.AppHost</PackageProjectUrl>
+    <Description>You can now customize more behavior of the .NET AppHost.</Description>
+
+    <RepositoryType>git</RepositoryType>
+    <Copyright>Copyright © 2022 dotnet campus, All Rights Reserved.</Copyright>
+  </PropertyGroup>
+</Project>
