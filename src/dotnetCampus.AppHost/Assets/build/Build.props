@@ -1,0 +1,12 @@
+<Project>
+
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- 指定 AppHost 所使用的 .NET 运行时的路径（效果相当于在编译时指定运行时的 DOTNET_ROOT 环境变量） -->
+    <DCAppHostDotnetRoot></DCAppHostDotnetRoot>
+  </PropertyGroup>
+
+</Project>

@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "dotnetCampus.AppHostDemo": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "COREHOST_TRACEFILE": "host.txt",
+        "COREHOST_TRACE": "1"
+      }
+    }
+  }
+}

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\src\dotnetCampus.AppHost\Assets\build\Build.props" />
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <DCAppHostDotnetRoot>runtime\6.0.1</DCAppHostDotnetRoot>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DCAppHostPatcherToolPath>$(MSBuildProjectDirectory)\..\..\src\dotnetCampus.AppHost\bin\$(Configuration)\net6.0\dotnetCampus.AppHost.dll</DCAppHostPatcherToolPath>
+  </PropertyGroup>
+
+  <Import Project="..\..\src\dotnetCampus.AppHost\Assets\build\Build.targets" />
+
+</Project>
