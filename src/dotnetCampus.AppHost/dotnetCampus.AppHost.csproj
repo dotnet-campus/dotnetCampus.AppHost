@@ -6,7 +6,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RootNamespace>dotnetCampus.AppHosting</RootNamespace>
-    <IsTool>true</IsTool>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
   <!-- 在 GitHub 的 Action 构建会添加 GITHUB_ACTIONS 变量 -->
@@ -46,6 +46,7 @@
       <None Include="Assets\build\Build.props" Pack="True" PackagePath="build\$(PackageId).props" />
       <None Include="Assets\build\Build.targets" Pack="True" PackagePath="build\$(PackageId).targets" />
       <None Include="Assets\template\**" Pack="True" PackagePath="template" />
+      <None Include="$(OutputPath)net6.0\**" Pack="True" PackagePath="tools" />
     </ItemGroup>
   </Target>
 

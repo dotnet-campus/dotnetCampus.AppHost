@@ -25,10 +25,10 @@
 
     <Error Condition="!Exists($(DCAppHostPatcherToolPath))" Text="工具路径 “$(DCAppHostPatcherToolPath)” 不存在，命令 $(_DCAppHostPatcherTool)。" />
     <Error Condition="$(DCAppHostDotnetRoot)!='' and $(_DCTargetFramework)==''" Text="不支持为 $(TargetFramework) 框架修改 AppHost。" />
-    <Error Condition="$(DCAppHostDotnetRoot)!='' and !Exists('$(_DCAppHostSourceDirectory)') " Text="不支持为（$(NETCoreSdkRuntimeIdentifier)）运行时修改 AppHost。" />
+    <Error Condition="$(DCAppHostDotnetRoot)!='' and !Exists('$(_DCAppHostSourceDirectory)') " Text="不支持为（$(DefaultAppHostRuntimeIdentifier)）运行时修改 AppHost。" />
 
-    <Message Importance="high" Condition="$(DCAppHostDotnetRoot)==''" Text="没有为框架 $(TargetFramework) 指定 DCAppHostDotnetRoot，因此不会自定义 AppHost 的 DOTNET_ROOT 路径。" />
-    <Message Importance="high" Condition="$(DCAppHostDotnetRoot)!=''" Text="已为框架 $(TargetFramework) 指定的自定义 AppHost DOTNET_ROOT 路径为 $(DCAppHostDotnetRoot)。" />
+    <Message Importance="high" Condition="$(DCAppHostDotnetRoot)==''" Text="项目 $(MSBuildProjectName) 没有为框架 $(TargetFramework) 和运行时 $(DefaultAppHostRuntimeIdentifier) 指定 DCAppHostDotnetRoot，因此不会自定义 AppHost 的 dotnet_root 路径。" />
+    <Message Importance="high" Condition="$(DCAppHostDotnetRoot)!=''" Text="项目 $(MSBuildProjectName) 已为框架 $(TargetFramework) 和运行时 $(DefaultAppHostRuntimeIdentifier) 指定的自定义 AppHost dotnet_root 路径为 $(DCAppHostDotnetRoot)。" />
 
     <PropertyGroup>
       <_DCAppHostSourceFile>$(_DCAppHostSourceDirectory)apphost.exe</_DCAppHostSourceFile>
