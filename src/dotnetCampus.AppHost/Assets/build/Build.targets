@@ -19,7 +19,7 @@
       <DCAppHostPatcherToolPath Condition="$(DCAppHostPatcherToolPath)==''">$(_DCAppHostRoot)tools\dotnetCampus.AppHost.dll</DCAppHostPatcherToolPath>
       <_DCAppHostPatcherTool Condition="$(DCAppHostPatcherToolPath.EndsWith('.dll'))">dotnet $(DCAppHostPatcherToolPath)</_DCAppHostPatcherTool>
       <_DCAppHostPatcherTool Condition="$(_DCAppHostPatcherTool)==''">$(DCAppHostPatcherToolPath)</_DCAppHostPatcherTool>
-      <_DCAppHostSourceDirectory>$(_DCAppHostRoot)template\$(_DCTargetFramework)\$(NETCoreSdkRuntimeIdentifier)\</_DCAppHostSourceDirectory>
+      <_DCAppHostSourceDirectory>$(_DCAppHostRoot)template\$(_DCTargetFramework)\$(DefaultAppHostRuntimeIdentifier)\</_DCAppHostSourceDirectory>
       <_DCAppHostTempTargetDirectory>$(IntermediateOutputPath)dotnetCampus.AppHost\</_DCAppHostTempTargetDirectory>
     </PropertyGroup>
 
