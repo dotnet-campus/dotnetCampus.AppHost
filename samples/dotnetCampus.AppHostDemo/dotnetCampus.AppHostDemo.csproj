@@ -7,8 +7,12 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <DCAppHostDotnetRoot>runtime\6.0.1</DCAppHostDotnetRoot>
     <IsPackable>false</IsPackable>
+    <DCAppHostDotnetRoot>runtime\6.0.1</DCAppHostDotnetRoot>
+    <DCCoreHostLibMissingDialogMessage>需要安装 .NET 6 运行时以继续运行。是否现在下载安装？</DCCoreHostLibMissingDialogMessage>
+    <DCCoreHostLibMissingDialogUrl>https://github.com/dotnet-campus/dotnetCampus.AppHost</DCCoreHostLibMissingDialogUrl>
+    <DCSystemNeedPrereqsMessage>需要先安装补丁 KB2533623 才能继续运行。现在下载安装吗？</DCSystemNeedPrereqsMessage>
+    <DCSystemNeedPrereqsUrl>https://github.com/dotnet-campus/dotnetCampus.AppHost</DCSystemNeedPrereqsUrl>
   </PropertyGroup>
 
   <PropertyGroup>

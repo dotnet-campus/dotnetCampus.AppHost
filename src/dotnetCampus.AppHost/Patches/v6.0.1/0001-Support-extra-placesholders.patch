@@ -1,0 +1,368 @@
+From 6aac8481faf52d387be3427f786b1361959eee5e Mon Sep 17 00:00:00 2001
+From: walterlv <xblero@gmail.com>
+Date: Fri, 28 Jan 2022 16:31:58 +0800
+Subject: [PATCH] Support extra placesholders: - dotnet_root -
+ host_missing_message - host_missing_url - need_prereqs_message -
+ need_prereqs_url
+
+---
+ .../corehost/apphost/apphost.windows.cpp      | 242 +++++++++++++++++-
+ src/native/corehost/fxr_resolver.cpp          |  58 ++++-
+ 2 files changed, 284 insertions(+), 16 deletions(-)
+
+diff --git a/src/native/corehost/apphost/apphost.windows.cpp b/src/native/corehost/apphost/apphost.windows.cpp
+index 7a3a94a960b..897e04b429f 100644
+--- a/src/native/corehost/apphost/apphost.windows.cpp
++++ b/src/native/corehost/apphost/apphost.windows.cpp
+@@ -8,6 +8,193 @@
+ #include "utils.h"
+ #include <shellapi.h>
+ 
++typedef std::shared_ptr < std::decay_t<decltype(*std::declval<HMODULE>())>> SafeModulePointer;
++
++bool CheckOSIsNetCoreSupported()
++{
++    // Initially, kernel32.dll doesn't need any specific LoadLibraryEx flags.
++    // Later, we will set LOAD_LIBRARY_SEARCH_SYSTEM32 for loading ucrtbase.dll if it is supported.
++    DWORD dwLoadLibraryFlags = 0;
++
++    SafeModulePointer hModule(
++        LoadLibraryExW(L"kernel32.dll", nullptr, dwLoadLibraryFlags),
++        FreeLibrary);
++
++    if (hModule)
++    {
++        // AddDllDirectory and LOAD_LIBRARY_SEARCH_SYSTEM32 flag for LoadLibraryEx were introduced by KB2533623.
++        // If this function is present in kernel32.dll, then KB2533623 or equivalent support is present
++        auto hFarProc = GetProcAddress(hModule.get(), "SetDefaultDllDirectories");
++        return hFarProc != nullptr;
++    }
++
++    return false;
++}
++
++#define EMBED_HOST_MISSING_HI_PART_UTF8 "a9259edaaad4b93446260c2986103cda" // SHA-256 of "HOST_MISSING" in UTF-8
++#define EMBED_HOST_MISSING_LO_PART_UTF8 "9314b67e35e77149d3f84415c7ce86e3"
++#define EMBED_HOST_MISSING_FULL_UTF8    (EMBED_HOST_MISSING_HI_PART_UTF8 EMBED_HOST_MISSING_LO_PART_UTF8) // NUL terminated
++
++#define EMBED_HOST_MISSING_URL_HI_PART_UTF8 "f9d4d2616fb661f40841679b3cd42136" // SHA-256 of "HOST_MISSING_URL" in UTF-8
++#define EMBED_HOST_MISSING_URL_LO_PART_UTF8 "faa2585546e66955111e297c764ff0a3"
++#define EMBED_HOST_MISSING_URL_FULL_UTF8    (EMBED_HOST_MISSING_URL_HI_PART_UTF8 EMBED_HOST_MISSING_URL_LO_PART_UTF8) // NUL terminated
++
++#define EMBED_NEED_PREREQS_HI_PART_UTF8 "008ee4667a30ee16eea1d63122c94db9" // SHA-256 of "NEED_PREREQS" in UTF-8
++#define EMBED_NEED_PREREQS_LO_PART_UTF8 "dea4f5e7a330e123587ce933ce233088"
++#define EMBED_NEED_PREREQS_FULL_UTF8    (EMBED_NEED_PREREQS_HI_PART_UTF8 EMBED_NEED_PREREQS_LO_PART_UTF8) // NUL terminated
++
++#define EMBED_NEED_PREREQS_URL_HI_PART_UTF8 "424b3211aeda8117b73dd23713905183" // SHA-256 of "NEED_PREREQS_URL" in UTF-8
++#define EMBED_NEED_PREREQS_URL_LO_PART_UTF8 "86163528f78f04027968bac88e919aba"
++#define EMBED_NEED_PREREQS_URL_FULL_UTF8    (EMBED_NEED_PREREQS_URL_HI_PART_UTF8 EMBED_NEED_PREREQS_URL_LO_PART_UTF8) // NUL terminated
++
++bool is_host_missing_enabled_for_execution(pal::string_t* host_missing_message)
++{
++    constexpr int EMBED_SZ = sizeof(EMBED_HOST_MISSING_FULL_UTF8) / sizeof(EMBED_HOST_MISSING_FULL_UTF8[0]);
++    constexpr int EMBED_MAX = (EMBED_SZ > 1025 ? EMBED_SZ : 1025); // 1024 DLL name length, 1 NUL
++
++    // Contains the EMBED_HOST_MISSING_FULL_UTF8 value at compile time or the managed DLL name replaced by "dotnet build".
++    // Must not be 'const' because std::string(&embed[0]) below would bind to a const string ctor plus length
++    // where length is determined at compile time (=64) instead of the actual length of the string at runtime.
++    static char embed[EMBED_MAX] = EMBED_HOST_MISSING_FULL_UTF8;     // series of NULs followed by embed hash string
++
++    static const char hi_part[] = EMBED_HOST_MISSING_HI_PART_UTF8;
++    static const char lo_part[] = EMBED_HOST_MISSING_LO_PART_UTF8;
++
++    if (!pal::clr_palstring(embed, host_missing_message))
++    {
++        trace::error(_X("The host_missing_message value could not be retrieved from the executable image."));
++        return false;
++    }
++
++    // Since the single static string is replaced by editing the executable, a reference string is needed to do the compare.
++    // So use two parts of the string that will be unaffected by the edit.
++    size_t hi_len = (sizeof(hi_part) / sizeof(hi_part[0])) - 1;
++    size_t lo_len = (sizeof(lo_part) / sizeof(lo_part[0])) - 1;
++
++    std::string binding(&embed[0]);
++    if ((binding.size() >= (hi_len + lo_len)) &&
++        binding.compare(0, hi_len, &hi_part[0]) == 0 &&
++        binding.compare(hi_len, lo_len, &lo_part[0]) == 0)
++    {
++        trace::info(_X("This executable does not binding to host_missing_message yet. The binding value is: '%s'"), host_missing_message->c_str());
++        return false;
++    }
++
++    trace::info(_X("The host_missing_message binding to this executable is: '%s'"), host_missing_message->c_str());
++    return true;
++}
++
++bool is_host_missing_url_enabled_for_execution(pal::string_t* host_missing_url)
++{
++    constexpr int EMBED_SZ = sizeof(EMBED_HOST_MISSING_URL_FULL_UTF8) / sizeof(EMBED_HOST_MISSING_URL_FULL_UTF8[0]);
++    constexpr int EMBED_MAX = (EMBED_SZ > 1025 ? EMBED_SZ : 1025); // 1024 DLL name length, 1 NUL
++
++    // Contains the EMBED_HOST_MISSING_URL_FULL_UTF8 value at compile time or the managed DLL name replaced by "dotnet build".
++    // Must not be 'const' because std::string(&embed[0]) below would bind to a const string ctor plus length
++    // where length is determined at compile time (=64) instead of the actual length of the string at runtime.
++    static char embed[EMBED_MAX] = EMBED_HOST_MISSING_URL_FULL_UTF8;     // series of NULs followed by embed hash string
++
++    static const char hi_part[] = EMBED_HOST_MISSING_URL_HI_PART_UTF8;
++    static const char lo_part[] = EMBED_HOST_MISSING_URL_LO_PART_UTF8;
++
++    if (!pal::clr_palstring(embed, host_missing_url))
++    {
++        trace::error(_X("The host_missing_url value could not be retrieved from the executable image."));
++        return false;
++    }
++
++    // Since the single static string is replaced by editing the executable, a reference string is needed to do the compare.
++    // So use two parts of the string that will be unaffected by the edit.
++    size_t hi_len = (sizeof(hi_part) / sizeof(hi_part[0])) - 1;
++    size_t lo_len = (sizeof(lo_part) / sizeof(lo_part[0])) - 1;
++
++    std::string binding(&embed[0]);
++    if ((binding.size() >= (hi_len + lo_len)) &&
++        binding.compare(0, hi_len, &hi_part[0]) == 0 &&
++        binding.compare(hi_len, lo_len, &lo_part[0]) == 0)
++    {
++        trace::info(_X("This executable does not binding to host_missing_url yet. The binding value is: '%s'"), host_missing_url->c_str());
++        return false;
++    }
++
++    trace::info(_X("The host_missing_url binding to this executable is: '%s'"), host_missing_url->c_str());
++    return true;
++}
++
++bool is_need_prereqs_enabled_for_execution(pal::string_t* need_prereqs_message)
++{
++    constexpr int EMBED_SZ = sizeof(EMBED_NEED_PREREQS_FULL_UTF8) / sizeof(EMBED_NEED_PREREQS_FULL_UTF8[0]);
++    constexpr int EMBED_MAX = (EMBED_SZ > 1025 ? EMBED_SZ : 1025); // 1024 DLL name length, 1 NUL
++
++    // Contains the EMBED_NEED_PREREQS_FULL_UTF8 value at compile time or the managed DLL name replaced by "dotnet build".
++    // Must not be 'const' because std::string(&embed[0]) below would bind to a const string ctor plus length
++    // where length is determined at compile time (=64) instead of the actual length of the string at runtime.
++    static char embed[EMBED_MAX] = EMBED_NEED_PREREQS_FULL_UTF8;     // series of NULs followed by embed hash string
++
++    static const char hi_part[] = EMBED_NEED_PREREQS_HI_PART_UTF8;
++    static const char lo_part[] = EMBED_NEED_PREREQS_LO_PART_UTF8;
++
++    if (!pal::clr_palstring(embed, need_prereqs_message))
++    {
++        trace::error(_X("The need_prereqs_message value could not be retrieved from the executable image."));
++        return false;
++    }
++
++    // Since the single static string is replaced by editing the executable, a reference string is needed to do the compare.
++    // So use two parts of the string that will be unaffected by the edit.
++    size_t hi_len = (sizeof(hi_part) / sizeof(hi_part[0])) - 1;
++    size_t lo_len = (sizeof(lo_part) / sizeof(lo_part[0])) - 1;
++
++    std::string binding(&embed[0]);
++    if ((binding.size() >= (hi_len + lo_len)) &&
++        binding.compare(0, hi_len, &hi_part[0]) == 0 &&
++        binding.compare(hi_len, lo_len, &lo_part[0]) == 0)
++    {
++        trace::info(_X("This executable does not binding to need_prereqs_message yet. The binding value is: '%s'"), need_prereqs_message->c_str());
++        return false;
++    }
++
++    trace::info(_X("The need_prereqs_message binding to this executable is: '%s'"), need_prereqs_message->c_str());
++    return true;
++}
++
++bool is_need_prereqs_url_enabled_for_execution(pal::string_t* need_prereqs_url)
++{
++    constexpr int EMBED_SZ = sizeof(EMBED_NEED_PREREQS_URL_FULL_UTF8) / sizeof(EMBED_NEED_PREREQS_URL_FULL_UTF8[0]);
++    constexpr int EMBED_MAX = (EMBED_SZ > 1025 ? EMBED_SZ : 1025); // 1024 DLL name length, 1 NUL
++
++    // Contains the EMBED_NEED_PREREQS_URL_FULL_UTF8 value at compile time or the managed DLL name replaced by "dotnet build".
++    // Must not be 'const' because std::string(&embed[0]) below would bind to a const string ctor plus length
++    // where length is determined at compile time (=64) instead of the actual length of the string at runtime.
++    static char embed[EMBED_MAX] = EMBED_NEED_PREREQS_URL_FULL_UTF8;     // series of NULs followed by embed hash string
++
++    static const char hi_part[] = EMBED_NEED_PREREQS_URL_HI_PART_UTF8;
++    static const char lo_part[] = EMBED_NEED_PREREQS_URL_LO_PART_UTF8;
++
++    if (!pal::clr_palstring(embed, need_prereqs_url))
++    {
++        trace::error(_X("The need_prereqs_url value could not be retrieved from the executable image."));
++        return false;
++    }
++
++    // Since the single static string is replaced by editing the executable, a reference string is needed to do the compare.
++    // So use two parts of the string that will be unaffected by the edit.
++    size_t hi_len = (sizeof(hi_part) / sizeof(hi_part[0])) - 1;
++    size_t lo_len = (sizeof(lo_part) / sizeof(lo_part[0])) - 1;
++
++    std::string binding(&embed[0]);
++    if ((binding.size() >= (hi_len + lo_len)) &&
++        binding.compare(0, hi_len, &hi_part[0]) == 0 &&
++        binding.compare(hi_len, lo_len, &lo_part[0]) == 0)
++    {
++        trace::info(_X("This executable does not binding to need_prereqs_url yet. The binding value is: '%s'"), need_prereqs_url->c_str());
++        return false;
++    }
++
++    trace::info(_X("The need_prereqs_url binding to this executable is: '%s'"), need_prereqs_url->c_str());
++    return true;
++}
++
+ namespace
+ {
+     pal::string_t g_buffered_errors;
+@@ -56,22 +243,43 @@ namespace
+         if (pal::getenv(_X("DOTNET_DISABLE_GUI_ERRORS"), &gui_errors_disabled) && pal::xtoi(gui_errors_disabled.c_str()) == 1)
+             return;
+ 
++        bool isMessageEmbedded = false;
++        bool isUrlEmbedded = false;
+         pal::string_t dialogMsg;
+         pal::string_t url;
+         const pal::string_t url_prefix = _X("  - ") DOTNET_CORE_APPLAUNCH_URL _X("?");
+-        if (error_code == StatusCode::CoreHostLibMissingFailure)
++        if (!CheckOSIsNetCoreSupported() && is_need_prereqs_enabled_for_execution(&dialogMsg))
+         {
+-            dialogMsg = pal::string_t(_X("To run this application, you must install .NET Desktop Runtime ")) + _STRINGIFY(COMMON_HOST_PKG_VER) + _X(" (") + get_arch() + _X(").\n\n");
+-            pal::string_t line;
+-            pal::stringstream_t ss(g_buffered_errors);
+-            while (std::getline(ss, line, _X('\n'))) {
+-                if (starts_with(line, url_prefix, true))
+-                {
+-                    size_t offset = url_prefix.length() - pal::strlen(DOTNET_CORE_APPLAUNCH_URL) - 1;
+-                    url = line.substr(offset, line.length() - offset);
+-                    break;
++            isMessageEmbedded = true;
++            is_need_prereqs_url_enabled_for_execution(&url);
++        }
++        else if (error_code == StatusCode::CoreHostLibMissingFailure)
++        {
++            if (!is_host_missing_enabled_for_execution(&dialogMsg))
++            {
++                dialogMsg = pal::string_t(_X("To run this application, you must install .NET Desktop Runtime ")) + _STRINGIFY(COMMON_HOST_PKG_VER) + _X(" (") + get_arch() + _X(").\n\n");
++            }
++            else
++            {
++                isMessageEmbedded = true;
++            }
++            if (!is_host_missing_url_enabled_for_execution(&url))
++            {
++                pal::string_t line;
++                pal::stringstream_t ss(g_buffered_errors);
++                while (std::getline(ss, line, _X('\n'))) {
++                    if (starts_with(line, url_prefix, true))
++                    {
++                        size_t offset = url_prefix.length() - pal::strlen(DOTNET_CORE_APPLAUNCH_URL) - 1;
++                        url = line.substr(offset, line.length() - offset);
++                        break;
++                    }
+                 }
+             }
++            else
++            {
++                isUrlEmbedded = true;
++            }
+         }
+         else if (error_code == StatusCode::FrameworkMissingFailure)
+         {
+@@ -123,11 +331,17 @@ namespace
+         else
+             return;
+ 
+-        dialogMsg.append(_X("Would you like to download it now?"));
++        if (!isMessageEmbedded)
++        {
++            dialogMsg.append(_X("Would you like to download it now?"));
++        }
+ 
+-        assert(url.length() > 0);
+-        assert(is_gui_application());
+-        url.append(_X("&gui=true"));
++        if (!isUrlEmbedded)
++        {
++            assert(url.length() > 0);
++            assert(is_gui_application());
++            url.append(_X("&gui=true"));
++        }
+ 
+         trace::verbose(_X("Showing error dialog for application: '%s' - error code: 0x%x - url: '%s'"), executable_name, error_code, url.c_str());
+         if (::MessageBoxW(nullptr, dialogMsg.c_str(), executable_name, MB_ICONERROR | MB_YESNO) == IDYES)
+diff --git a/src/native/corehost/fxr_resolver.cpp b/src/native/corehost/fxr_resolver.cpp
+index b59c59f10fd..56421174ae7 100644
+--- a/src/native/corehost/fxr_resolver.cpp
++++ b/src/native/corehost/fxr_resolver.cpp
+@@ -7,6 +7,54 @@
+ #include <trace.h>
+ #include <utils.h>
+ 
++#if defined(FEATURE_APPHOST) || defined(FEATURE_LIBHOST)
++#define EMBED_DOTNET_ROOT_HI_PART_UTF8 "622e5d2d0f48bd3448f713291ed3f86d" // SHA-256 of "DOTNET_ROOT" in UTF-8
++#define EMBED_DOTNET_ROOT_LO_PART_UTF8 "f2f05ca222e95084f222207c5c348eea"
++#define EMBED_DOTNET_ROOT_FULL_UTF8    (EMBED_DOTNET_ROOT_HI_PART_UTF8 EMBED_DOTNET_ROOT_LO_PART_UTF8) // NUL terminated
++
++bool is_dotnet_root_enabled_for_execution(pal::string_t* dotnet_root)
++{
++    constexpr int EMBED_SZ = sizeof(EMBED_DOTNET_ROOT_FULL_UTF8) / sizeof(EMBED_DOTNET_ROOT_FULL_UTF8[0]);
++    constexpr int EMBED_MAX = (EMBED_SZ > 1025 ? EMBED_SZ : 1025); // 1024 DLL name length, 1 NUL
++
++    // Contains the EMBED_DOTNET_ROOT_FULL_UTF8 value at compile time or the managed DLL name replaced by "dotnet build".
++    // Must not be 'const' because std::string(&embed[0]) below would bind to a const string ctor plus length
++    // where length is determined at compile time (=64) instead of the actual length of the string at runtime.
++    static char embed[EMBED_MAX] = EMBED_DOTNET_ROOT_FULL_UTF8;     // series of NULs followed by embed hash string
++
++    static const char hi_part[] = EMBED_DOTNET_ROOT_HI_PART_UTF8;
++    static const char lo_part[] = EMBED_DOTNET_ROOT_LO_PART_UTF8;
++
++    if (!pal::clr_palstring(embed, dotnet_root))
++    {
++        trace::error(_X("The dotnet_root value could not be retrieved from the executable image."));
++        return false;
++    }
++
++    // Since the single static string is replaced by editing the executable, a reference string is needed to do the compare.
++    // So use two parts of the string that will be unaffected by the edit.
++    size_t hi_len = (sizeof(hi_part) / sizeof(hi_part[0])) - 1;
++    size_t lo_len = (sizeof(lo_part) / sizeof(lo_part[0])) - 1;
++
++    std::string binding(&embed[0]);
++    if ((binding.size() >= (hi_len + lo_len)) &&
++        binding.compare(0, hi_len, &hi_part[0]) == 0 &&
++        binding.compare(hi_len, lo_len, &lo_part[0]) == 0)
++    {
++        trace::info(_X("This executable does not binding to dotnet_root yet. The binding value is: '%s'"), dotnet_root->c_str());
++        return false;
++    }
++
++    trace::info(_X("The dotnet_root binding to this executable is: '%s'"), dotnet_root->c_str());
++    if (pal::realpath(dotnet_root))
++    {
++        return true;
++    }
++    trace::info(_X("Did not find binded dotnet_root directory: '%s'"), dotnet_root->c_str());
++    return false;
++}
++#endif // FEATURE_APPHOST
++
+ namespace
+ {
+     bool get_latest_fxr(pal::string_t fxr_root, pal::string_t* out_fxr_path)
+@@ -65,11 +113,17 @@ bool fxr_resolver::try_get_path(const pal::string_t& root_path, pal::string_t* o
+         return true;
+     }
+ 
+-    // For framework-dependent apps, use DOTNET_ROOT_<ARCH>
++
+     pal::string_t default_install_location;
+     pal::string_t dotnet_root_env_var_name;
+-    if (get_dotnet_root_from_env(&dotnet_root_env_var_name, out_dotnet_root))
++    if (is_dotnet_root_enabled_for_execution(out_dotnet_root))
++    {
++        // For apps that using dotnetCampus.AppHost, use the EMBED_DOTNET_ROOT placeholder.
++        trace::info(_X("Using embedded dotnet_root [%s] as runtime location."), out_dotnet_root->c_str());
++    }
++    else if (get_dotnet_root_from_env(&dotnet_root_env_var_name, out_dotnet_root))
+     {
++        // For framework-dependent apps, use DOTNET_ROOT_<ARCH>
+         trace::info(_X("Using environment variable %s=[%s] as runtime location."), dotnet_root_env_var_name.c_str(), out_dotnet_root->c_str());
+     }
+     else
+-- 
+2.34.1.windows.1
+

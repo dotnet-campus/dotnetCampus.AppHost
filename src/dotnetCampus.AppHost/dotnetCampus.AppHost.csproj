@@ -32,12 +32,17 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
     <PackageReference Include="dotnetCampus.CommandLine.Source" Version="3.3.0" PrivateAssets="All" />
+    <PackageReference Include="dotnetCampus.Configurations.Source" Version="1.6.8" PrivateAssets="All" />
     <PackageReference Include="dotnetCampus.MSBuildUtils.Source" Version="1.1.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' != 'net6.0'">
     <Compile Remove="**\*.cs" />
     <Compile Include="Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="SourceProject\**" />
   </ItemGroup>
 
   <!-- 引入包文件用于打包。 -->
