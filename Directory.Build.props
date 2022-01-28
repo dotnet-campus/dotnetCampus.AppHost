@@ -13,5 +13,8 @@
 
     <RepositoryType>git</RepositoryType>
     <Copyright>Copyright © 2022 dotnet campus, All Rights Reserved.</Copyright>
+
+    <SourceRoot>$(MSBuildThisFileDirectory)src</SourceRoot>
+    <BinRoot>$(MSBuildThisFileDirectory)bin</BinRoot>
   </PropertyGroup>
 </Project>

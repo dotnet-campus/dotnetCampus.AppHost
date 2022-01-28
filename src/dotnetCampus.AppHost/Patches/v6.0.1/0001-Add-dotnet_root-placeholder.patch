@@ -1,0 +1,91 @@
+From 9e46f8f0d3dc0d87a8d6c8781d8f4258ffdb9870 Mon Sep 17 00:00:00 2001
+From: walterlv <xblero@gmail.com>
+Date: Thu, 27 Jan 2022 08:26:57 +0800
+Subject: [PATCH] Add dotnet_root placeholder
+
+---
+ src/native/corehost/fxr_resolver.cpp | 58 +++++++++++++++++++++++++++-
+ 1 file changed, 56 insertions(+), 2 deletions(-)
+
+diff --git a/src/native/corehost/fxr_resolver.cpp b/src/native/corehost/fxr_resolver.cpp
+index b59c59f10fd..e2ddf8f4a3f 100644
+--- a/src/native/corehost/fxr_resolver.cpp
++++ b/src/native/corehost/fxr_resolver.cpp
+@@ -7,6 +7,54 @@
+ #include <trace.h>
+ #include <utils.h>
+ 
++#if defined(FEATURE_APPHOST) || defined(FEATURE_LIBHOST)
++#define EMBED_DOTNET_ROOT_HI_PART_UTF8 "622e5d2d0f48bd3448f713291ed3f86d" // SHA-256 of "DOTNET_ROOT" in UTF-8
++#define EMBED_DOTNET_ROOT_LO_PART_UTF8 "f2f05ca222e95084f222207c5c348eea"
++#define EMBED_DOTNET_ROOT_FULL_UTF8    (EMBED_DOTNET_ROOT_HI_PART_UTF8 EMBED_DOTNET_ROOT_LO_PART_UTF8) // NUL terminated
++
++bool is_dotnet_root_enabled_for_execution(pal::string_t* dotnet_root)
++{
++    constexpr int EMBED_SZ = sizeof(EMBED_DOTNET_ROOT_FULL_UTF8) / sizeof(EMBED_DOTNET_ROOT_FULL_UTF8[0]);
++    constexpr int EMBED_MAX = (EMBED_SZ > 1025 ? EMBED_SZ : 1025); // 1024 DLL name length, 1 NUL
++
++    // Contains the EMBED_DOTNET_ROOT_FULL_UTF8 value at compile time or the managed DLL name replaced by "dotnet build".
++    // Must not be 'const' because std::string(&embed[0]) below would bind to a const string ctor plus length
++    // where length is determined at compile time (=64) instead of the actual length of the string at runtime.
++    static char embedDotnetRoot[EMBED_MAX] = EMBED_DOTNET_ROOT_FULL_UTF8;     // series of NULs followed by embed hash string
++
++    static const char hi_part[] = EMBED_DOTNET_ROOT_HI_PART_UTF8;
++    static const char lo_part[] = EMBED_DOTNET_ROOT_LO_PART_UTF8;
++
++    if (!pal::clr_palstring(embedDotnetRoot, dotnet_root))
++    {
++        trace::error(_X("The dotnet_root value could not be retrieved from the executable image."));
++        return false;
++    }
++
++    // Since the single static string is replaced by editing the executable, a reference string is needed to do the compare.
++    // So use two parts of the string that will be unaffected by the edit.
++    size_t hi_len = (sizeof(hi_part) / sizeof(hi_part[0])) - 1;
++    size_t lo_len = (sizeof(lo_part) / sizeof(lo_part[0])) - 1;
++
++    std::string binding(&embedDotnetRoot[0]);
++    if ((binding.size() >= (hi_len + lo_len)) &&
++        binding.compare(0, hi_len, &hi_part[0]) == 0 &&
++        binding.compare(hi_len, lo_len, &lo_part[0]) == 0)
++    {
++        trace::info(_X("This executable does not binding to dotnet_root yet. The binding value is: '%s'"), dotnet_root->c_str());
++        return false;
++    }
++
++    trace::info(_X("The dotnet_root binding to this executable is: '%s'"), dotnet_root->c_str());
++    if (pal::realpath(dotnet_root))
++    {
++        return true;
++    }
++    trace::info(_X("Did not find binded dotnet_root directory: '%s'"), dotnet_root->c_str());
++    return false;
++}
++#endif // FEATURE_APPHOST
++
+ namespace
+ {
+     bool get_latest_fxr(pal::string_t fxr_root, pal::string_t* out_fxr_path)
+@@ -65,11 +113,17 @@ bool fxr_resolver::try_get_path(const pal::string_t& root_path, pal::string_t* o
+         return true;
+     }
+ 
+-    // For framework-dependent apps, use DOTNET_ROOT_<ARCH>
++
+     pal::string_t default_install_location;
+     pal::string_t dotnet_root_env_var_name;
+-    if (get_dotnet_root_from_env(&dotnet_root_env_var_name, out_dotnet_root))
++    if (is_dotnet_root_enabled_for_execution(out_dotnet_root))
++    {
++        // For apps that using dotnetCampus.AppHost, use the EMBED_DOTNET_ROOT placeholder.
++        trace::info(_X("Using embedded dotnet_root [%s] as runtime location."), out_dotnet_root->c_str());
++    }
++    else if (get_dotnet_root_from_env(&dotnet_root_env_var_name, out_dotnet_root))
+     {
++        // For framework-dependent apps, use DOTNET_ROOT_<ARCH>
+         trace::info(_X("Using environment variable %s=[%s] as runtime location."), dotnet_root_env_var_name.c_str(), out_dotnet_root->c_str());
+     }
+     else
+-- 
+2.34.1.windows.1
+
