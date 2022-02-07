@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <!--<Import Project="..\..\src\dotnetCampus.AppHost\Assets\build\Build.props" />-->
+  <Import Project="..\..\src\dotnetCampus.AppHost\Assets\build\Build.props" />
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -23,6 +23,6 @@
     <PackageReference Include="dotnetCampus.PublishFolderCleaner" Version="3.4.0" />
   </ItemGroup>
 
-  <!--<Import Project="..\..\src\dotnetCampus.AppHost\Assets\build\Build.targets" />-->
+  <Import Project="..\..\src\dotnetCampus.AppHost\Assets\build\Build.targets" />
 
 </Project>

@@ -19,9 +19,9 @@ internal class AppHostPatchingTask : CommandLineTask
     private static void Patch(string appHostExeFilePath, string placeholder, string? value, string placeholderName)
     {
         var patcher = new AppHostPatcher(appHostExeFilePath, placeholder, placeholderName);
-        if (value is { } dotnetRoot)
+        if (!string.IsNullOrWhiteSpace(value))
         {
-            patcher.Patch(dotnetRoot);
+            patcher.Patch(value);
         }
     }
 }
