@@ -26,22 +26,22 @@
 
     <PropertyGroup>
       <_DCAppHostWillBeChanged>false</_DCAppHostWillBeChanged>
-      <_DCAppHostWillBeChanged Condition="$(_DCAppHostTempTargetFile)!='' or $(DCCoreHostLibMissingDialogMessage)!='' or $(DCCoreHostLibMissingDialogUrl)!='' or $(DCSystemNeedPrereqsMessage)!='' or $(DCSystemNeedPrereqsUrl)!=''">true</_DCAppHostWillBeChanged>
+      <_DCAppHostWillBeChanged Condition="$(_DCAppHostTempTargetFile)!='' or $(AppHostCoreLibMissingDialogMessage)!='' or $(AppHostCoreLibMissingDialogUrl)!='' or $(AppHostNeedSystemPrereqsMessage)!='' or $(AppHostNeedSystemPrereqsUrl)!=''">true</_DCAppHostWillBeChanged>
     </PropertyGroup>
 
     <Error Condition="!Exists($(DCAppHostPatcherToolPath))" Text="工具路径 “$(DCAppHostPatcherToolPath)” 不存在，命令 $(_DCAppHostPatcherTool)。" />
     <Error Condition="$(_DCAppHostWillBeChanged)==true and $(_DCTargetFramework)==''" Text="不支持为 $(TargetFramework) 框架修改 AppHost。" />
     <Error Condition="$(_DCAppHostWillBeChanged)==true and !Exists('$(_DCAppHostSourceDirectory)')" Text="不支持为（$(DefaultAppHostRuntimeIdentifier)）运行时修改 AppHost。" />
-    <Error Condition="$(DCSystemNeedPrereqsMessage)!='' and $(DCSystemNeedPrereqsUrl)==''" Text="设置了 DCSystemNeedPrereqsMessage 后，必须也设置 DCSystemNeedPrereqsUrl，因为它没有默认值。" />
-    <Error Condition="$(DCSystemNeedPrereqsMessage)=='' and $(DCSystemNeedPrereqsUrl)!=''" Text="设置了 DCSystemNeedPrereqsUrl 后，必须也设置 DCSystemNeedPrereqsMessage，因为它没有默认值。" />
+    <Error Condition="$(AppHostNeedSystemPrereqsMessage)!='' and $(AppHostNeedSystemPrereqsUrl)==''" Text="设置了 AppHostNeedSystemPrereqsMessage 后，必须也设置 AppHostNeedSystemPrereqsUrl，因为它没有默认值。" />
+    <Error Condition="$(AppHostNeedSystemPrereqsMessage)=='' and $(AppHostNeedSystemPrereqsUrl)!=''" Text="设置了 AppHostNeedSystemPrereqsUrl 后，必须也设置 AppHostNeedSystemPrereqsMessage，因为它没有默认值。" />
 
     <Message Importance="high" Condition="$(_DCAppHostWillBeChanged)!=true" Text="项目 $(MSBuildProjectName) 没有为框架 $(TargetFramework) 和运行时 $(DefaultAppHostRuntimeIdentifier) 设置任何 AppHost 相关属性，因此不会修改 AppHost。" />
     <Message Importance="high" Condition="$(_DCAppHostWillBeChanged)==true" Text="项目 $(MSBuildProjectName) 已为框架 $(TargetFramework) 和运行时 $(DefaultAppHostRuntimeIdentifier) 设置自定义的 AppHost 属性：
-.NET 运行时路径：$(DCAppHostDotnetRoot)
-.NET 运行时缺失提示：$(DCCoreHostLibMissingDialogMessage)
-.NET 运行时缺失 URL：$(DCCoreHostLibMissingDialogUrl)
-系统不支持运行 .NET 提示：$(DCSystemNeedPrereqsMessage)
-系统不支持运行 .NET URL：$(DCSystemNeedPrereqsUrl)" />
+.NET 运行时路径：$(AppHostDotNetRoot)
+.NET 运行时缺失提示：$(AppHostCoreLibMissingDialogMessage)
+.NET 运行时缺失 URL：$(AppHostCoreLibMissingDialogUrl)
+系统不支持运行 .NET 提示：$(AppHostNeedSystemPrereqsMessage)
+系统不支持运行 .NET URL：$(AppHostNeedSystemPrereqsUrl)" />
 
     <PropertyGroup>
       <_DCAppHostSourceFile>$(_DCAppHostSourceDirectory)apphost.exe</_DCAppHostSourceFile>
@@ -53,20 +53,20 @@
       <_DCAppHostOptionLine Include="AppHostFile" />
       <_DCAppHostOptionLine Include="$(_DCAppHostTempTargetFile)" />
       <_DCAppHostOptionLine Include=">" />
-      <_DCAppHostOptionLine Include="DotnetRoot" />
-      <_DCAppHostOptionLine Include="$(DCAppHostDotnetRoot)" />
+      <_DCAppHostOptionLine Include="DotNetRoot" />
+      <_DCAppHostOptionLine Include="$(AppHostDotNetRoot)" />
       <_DCAppHostOptionLine Include=">" />
       <_DCAppHostOptionLine Include="HostMissingMessage" />
-      <_DCAppHostOptionLine Include="$(DCCoreHostLibMissingDialogMessage)" />
+      <_DCAppHostOptionLine Include="$(AppHostCoreLibMissingDialogMessage)" />
       <_DCAppHostOptionLine Include=">" />
       <_DCAppHostOptionLine Include="HostMissingUrl" />
-      <_DCAppHostOptionLine Include="$(DCCoreHostLibMissingDialogUrl)" />
+      <_DCAppHostOptionLine Include="$(AppHostCoreLibMissingDialogUrl)" />
       <_DCAppHostOptionLine Include=">" />
       <_DCAppHostOptionLine Include="NeedPrereqsMessage" />
-      <_DCAppHostOptionLine Include="$(DCSystemNeedPrereqsMessage)" />
+      <_DCAppHostOptionLine Include="$(AppHostNeedSystemPrereqsMessage)" />
       <_DCAppHostOptionLine Include=">" />
       <_DCAppHostOptionLine Include="NeedPrereqsUrl" />
-      <_DCAppHostOptionLine Include="$(DCSystemNeedPrereqsUrl)" />
+      <_DCAppHostOptionLine Include="$(AppHostNeedSystemPrereqsUrl)" />
       <_DCAppHostOptionLine Include=">" />
     </ItemGroup>
 

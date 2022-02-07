@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <Import Project="..\..\src\dotnetCampus.AppHost\Assets\build\Build.props" />
+  <!--<Import Project="..\..\src\dotnetCampus.AppHost\Assets\build\Build.props" />-->
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -8,17 +8,21 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <IsPackable>false</IsPackable>
-    <DCAppHostDotnetRoot>runtime\6.0.1</DCAppHostDotnetRoot>
-    <DCCoreHostLibMissingDialogMessage>需要安装 .NET 6 运行时以继续运行。是否现在下载安装？</DCCoreHostLibMissingDialogMessage>
-    <DCCoreHostLibMissingDialogUrl>https://github.com/dotnet-campus/dotnetCampus.AppHost</DCCoreHostLibMissingDialogUrl>
-    <DCSystemNeedPrereqsMessage>需要先安装补丁 KB2533623 才能继续运行。现在下载安装吗？</DCSystemNeedPrereqsMessage>
-    <DCSystemNeedPrereqsUrl>https://github.com/dotnet-campus/dotnetCampus.AppHost</DCSystemNeedPrereqsUrl>
+    <!--<AppHostDotNetRoot>runtime\6.0.1</AppHostDotNetRoot>-->
+    <AppHostCoreLibMissingDialogMessage>需要安装 .NET 6 运行时以继续运行。是否现在下载安装？</AppHostCoreLibMissingDialogMessage>
+    <AppHostCoreLibMissingDialogUrl>https://github.com/dotnet-campus/dotnetCampus.AppHost</AppHostCoreLibMissingDialogUrl>
+    <AppHostNeedSystemPrereqsMessage>需要先安装补丁 KB2533623 才能继续运行。现在下载安装吗？</AppHostNeedSystemPrereqsMessage>
+    <AppHostNeedSystemPrereqsUrl>https://github.com/dotnet-campus/dotnetCampus.AppHost</AppHostNeedSystemPrereqsUrl>
   </PropertyGroup>
 
   <PropertyGroup>
     <DCAppHostPatcherToolPath>$(MSBuildProjectDirectory)\..\..\src\dotnetCampus.AppHost\bin\$(Configuration)\net6.0\dotnetCampus.AppHost.dll</DCAppHostPatcherToolPath>
   </PropertyGroup>
 
-  <Import Project="..\..\src\dotnetCampus.AppHost\Assets\build\Build.targets" />
+  <ItemGroup>
+    <PackageReference Include="dotnetCampus.PublishFolderCleaner" Version="3.4.0" />
+  </ItemGroup>
+
+  <!--<Import Project="..\..\src\dotnetCampus.AppHost\Assets\build\Build.targets" />-->
 
 </Project>

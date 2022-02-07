@@ -7,18 +7,18 @@
   <PropertyGroup>
 
     <!-- 指定 AppHost 所使用的 .NET 运行时的路径（效果相当于在编译时指定运行时的 DOTNET_ROOT 环境变量） -->
-    <DCAppHostDotnetRoot></DCAppHostDotnetRoot>
+    <AppHostDotNetRoot></AppHostDotNetRoot>
 
     <!-- 适时给出错误提示：无法找到可用的 .NET 运行时。 -->
-    <DCCoreHostLibMissingDialogMessage></DCCoreHostLibMissingDialogMessage>
+    <AppHostCoreLibMissingDialogMessage></AppHostCoreLibMissingDialogMessage>
     <!-- 适时给出错误URL：无法找到可用的 .NET 运行时。 -->
-    <DCCoreHostLibMissingDialogUrl></DCCoreHostLibMissingDialogUrl>
+    <AppHostCoreLibMissingDialogUrl></AppHostCoreLibMissingDialogUrl>
 
     <!-- https://blog.lindexi.com/post/%E6%8E%A2%E7%B4%A2-dotnet-core-%E4%B8%BA%E4%BD%95%E5%9C%A8-Windows7-%E7%B3%BB%E7%BB%9F%E9%9C%80%E8%A6%81%E8%A1%A5%E4%B8%81%E7%9A%84%E5%8E%9F%E5%9B%A0.html -->
     <!-- 适时给出错误提示：此系统运行 .NET 应用需要提前安装补丁 KB2533623。 -->
-    <DCSystemNeedPrereqsMessage></DCSystemNeedPrereqsMessage>
+    <AppHostNeedSystemPrereqsMessage></AppHostNeedSystemPrereqsMessage>
     <!-- 适时给出错误URL：此系统运行 .NET 应用需要提前安装补丁 KB2533623。 -->
-    <DCSystemNeedPrereqsUrl></DCSystemNeedPrereqsUrl>
+    <AppHostNeedSystemPrereqsUrl></AppHostNeedSystemPrereqsUrl>
 
   </PropertyGroup>
 

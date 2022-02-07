@@ -10,7 +10,7 @@ internal class BuildOptions : Configuration
 
     public FileInfo AppHostFile => new(GetString());
 
-    public string? DotnetRoot => GetString();
+    public string? DotNetRoot => GetString();
 
     public string? HostMissingMessage => GetString();
 

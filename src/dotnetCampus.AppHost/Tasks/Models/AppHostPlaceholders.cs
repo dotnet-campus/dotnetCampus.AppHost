@@ -3,19 +3,19 @@
 internal static class AppHostPlaceholders
 {
     /// <summary>
-    /// <see cref="DotnetRoot"/> 的 MSBuild 属性名。
+    /// <see cref="DotNetRoot"/> 的 MSBuild 属性名。
     /// </summary>
-    public const string DotnetRootName = "DCAppHostDotnetRoot";
+    public const string DotNetRootName = "AppHostDotNetRoot";
 
     /// <summary>
     /// 占位符，代表 AppHost 在编译后将使用的 .NET 运行时路径。
     /// </summary>
-    public const string DotnetRoot = "622e5d2d0f48bd3448f713291ed3f86df2f05ca222e95084f222207c5c348eea";
+    public const string DotNetRoot = "622e5d2d0f48bd3448f713291ed3f86df2f05ca222e95084f222207c5c348eea";
 
     /// <summary>
     /// <see cref="HostMissingMessage"/> 的 MSBuild 属性名。
     /// </summary>
-    public const string HostMissingMessageName = "DCCoreHostLibMissingDialogMessage";
+    public const string HostMissingMessageName = "AppHostCoreLibMissingDialogMessage";
 
     /// <summary>
     /// 占位符，代表 AppHost 无法找到 .NET 运行时后弹出的错误框中的文案。
@@ -25,7 +25,7 @@ internal static class AppHostPlaceholders
     /// <summary>
     /// <see cref="HostMissingUrl"/> 的 MSBuild 属性名。
     /// </summary>
-    public const string HostMissingUrlName = "DCCoreHostLibMissingDialogUrl";
+    public const string HostMissingUrlName = "AppHostCoreLibMissingDialogUrl";
 
     /// <summary>
     /// 占位符，代表 AppHost 无法找到 .NET 运行时后在弹出的错误框中点“是”将跳转的 URL。
@@ -35,7 +35,7 @@ internal static class AppHostPlaceholders
     /// <summary>
     /// <see cref="NeedPrereqsMessage"/> 的 MSBuild 属性名。
     /// </summary>
-    public const string NeedPrereqsMessageName = "DCSystemNeedPrereqsMessage";
+    public const string NeedPrereqsMessageName = "AppHostNeedSystemPrereqsMessage";
 
     /// <summary>
     /// 占位符，代表当前系统不支持运行 .NET 应用，需要 KB2533623 补丁。
@@ -45,7 +45,7 @@ internal static class AppHostPlaceholders
     /// <summary>
     /// <see cref="NeedPrereqsUrl"/> 的 MSBuild 属性名。
     /// </summary>
-    public const string NeedPrereqsUrlName = "DCSystemNeedPrereqsUrl";
+    public const string NeedPrereqsUrlName = "AppHostNeedSystemPrereqsUrl";
 
     /// <summary>
     /// 占位符，代表当前系统不支持运行 .NET 应用，需要 KB2533623 补丁后在弹出的错误框中点“是”将跳转的 URL。

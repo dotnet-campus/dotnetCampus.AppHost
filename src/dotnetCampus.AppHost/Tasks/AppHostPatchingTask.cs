@@ -9,7 +9,7 @@ internal class AppHostPatchingTask : CommandLineTask
 {
     protected override void RunCore(BuildOptions options)
     {
-        Patch(options.AppHostFile.FullName, P.DotnetRoot, options.DotnetRoot, P.DotnetRootName);
+        Patch(options.AppHostFile.FullName, P.DotNetRoot, options.DotNetRoot, P.DotNetRootName);
         Patch(options.AppHostFile.FullName, P.HostMissingMessage, options.HostMissingMessage, P.HostMissingMessageName);
         Patch(options.AppHostFile.FullName, P.HostMissingUrl, options.HostMissingUrl, P.HostMissingUrlName);
         Patch(options.AppHostFile.FullName, P.NeedPrereqsMessage, options.NeedPrereqsMessage, P.NeedPrereqsMessageName);
