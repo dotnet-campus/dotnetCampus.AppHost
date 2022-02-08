@@ -7,13 +7,21 @@
     <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <DCAppHostDotnetRoot>runtime\6.0.1</DCAppHostDotnetRoot>
     <IsPackable>false</IsPackable>
+    <!--<AppHostDotNetRoot>runtime\6.0.1</AppHostDotNetRoot>-->
+    <AppHostCoreLibMissingDialogMessage>需要安装 .NET 6 运行时以继续运行。是否现在下载安装？</AppHostCoreLibMissingDialogMessage>
+    <AppHostCoreLibMissingDialogUrl>https://github.com/dotnet-campus/dotnetCampus.AppHost</AppHostCoreLibMissingDialogUrl>
+    <AppHostNeedSystemPrereqsMessage>需要先安装补丁 KB2533623 才能继续运行。现在下载安装吗？</AppHostNeedSystemPrereqsMessage>
+    <AppHostNeedSystemPrereqsUrl>https://github.com/dotnet-campus/dotnetCampus.AppHost</AppHostNeedSystemPrereqsUrl>
   </PropertyGroup>
 
   <PropertyGroup>
     <DCAppHostPatcherToolPath>$(MSBuildProjectDirectory)\..\..\src\dotnetCampus.AppHost\bin\$(Configuration)\net6.0\dotnetCampus.AppHost.dll</DCAppHostPatcherToolPath>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="dotnetCampus.PublishFolderCleaner" Version="3.4.0" />
+  </ItemGroup>
 
   <Import Project="..\..\src\dotnetCampus.AppHost\Assets\build\Build.targets" />
 
