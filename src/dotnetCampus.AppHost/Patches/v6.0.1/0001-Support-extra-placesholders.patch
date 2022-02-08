@@ -1,4 +1,4 @@
-From 6aac8481faf52d387be3427f786b1361959eee5e Mon Sep 17 00:00:00 2001
+From 90c9371fa4000cba680312f8f920286fbee4f956 Mon Sep 17 00:00:00 2001
 From: walterlv <xblero@gmail.com>
 Date: Fri, 28 Jan 2022 16:31:58 +0800
 Subject: [PATCH] Support extra placesholders: - dotnet_root -
@@ -6,15 +6,15 @@ Subject: [PATCH] Support extra placesholders: - dotnet_root -
  need_prereqs_url
 
 ---
- .../corehost/apphost/apphost.windows.cpp      | 242 +++++++++++++++++-
- src/native/corehost/fxr_resolver.cpp          |  58 ++++-
- 2 files changed, 284 insertions(+), 16 deletions(-)
+ .../corehost/apphost/apphost.windows.cpp      | 240 +++++++++++++++++-
+ src/native/corehost/fxr_resolver.cpp          |  63 ++++-
+ 2 files changed, 287 insertions(+), 16 deletions(-)
 
 diff --git a/src/native/corehost/apphost/apphost.windows.cpp b/src/native/corehost/apphost/apphost.windows.cpp
-index 7a3a94a960b..897e04b429f 100644
+index 7a3a94a960b..0d32e4319e8 100644
 --- a/src/native/corehost/apphost/apphost.windows.cpp
 +++ b/src/native/corehost/apphost/apphost.windows.cpp
-@@ -8,6 +8,193 @@
+@@ -8,6 +8,191 @@
  #include "utils.h"
  #include <shellapi.h>
  
@@ -206,10 +206,10 @@ index 7a3a94a960b..897e04b429f 100644
  namespace
  {
      pal::string_t g_buffered_errors;
-@@ -56,22 +243,43 @@ namespace
+@@ -56,22 +241,43 @@ namespace
          if (pal::getenv(_X("DOTNET_DISABLE_GUI_ERRORS"), &gui_errors_disabled) && pal::xtoi(gui_errors_disabled.c_str()) == 1)
              return;
-
+ 
 +        bool isMessageEmbedded = false;
 +        bool isUrlEmbedded = false;
          pal::string_t dialogMsg;
@@ -260,16 +260,16 @@ index 7a3a94a960b..897e04b429f 100644
          }
          else if (error_code == StatusCode::FrameworkMissingFailure)
          {
-@@ -123,11 +331,17 @@ namespace
+@@ -123,11 +329,17 @@ namespace
          else
              return;
-
+ 
 -        dialogMsg.append(_X("Would you like to download it now?"));
 +        if (!isMessageEmbedded)
 +        {
 +            dialogMsg.append(_X("Would you like to download it now?"));
 +        }
-
+ 
 -        assert(url.length() > 0);
 -        assert(is_gui_application());
 -        url.append(_X("&gui=true"));
@@ -279,17 +279,17 @@ index 7a3a94a960b..897e04b429f 100644
 +            assert(is_gui_application());
 +            url.append(_X("&gui=true"));
 +        }
-
+ 
          trace::verbose(_X("Showing error dialog for application: '%s' - error code: 0x%x - url: '%s'"), executable_name, error_code, url.c_str());
          if (::MessageBoxW(nullptr, dialogMsg.c_str(), executable_name, MB_ICONERROR | MB_YESNO) == IDYES)
 diff --git a/src/native/corehost/fxr_resolver.cpp b/src/native/corehost/fxr_resolver.cpp
-index b59c59f10fd..56421174ae7 100644
+index b59c59f10fd..76bd49801c7 100644
 --- a/src/native/corehost/fxr_resolver.cpp
 +++ b/src/native/corehost/fxr_resolver.cpp
-@@ -7,6 +7,54 @@
+@@ -7,6 +7,49 @@
  #include <trace.h>
  #include <utils.h>
-
+ 
 +#if defined(FEATURE_APPHOST) || defined(FEATURE_LIBHOST)
 +#define EMBED_DOTNET_ROOT_HI_PART_UTF8 "622e5d2d0f48bd3448f713291ed3f86d" // SHA-256 of "DOTNET_ROOT" in UTF-8
 +#define EMBED_DOTNET_ROOT_LO_PART_UTF8 "f2f05ca222e95084f222207c5c348eea"
@@ -329,22 +329,17 @@ index b59c59f10fd..56421174ae7 100644
 +    }
 +
 +    trace::info(_X("The dotnet_root binding to this executable is: '%s'"), dotnet_root->c_str());
-+    if (pal::realpath(dotnet_root))
-+    {
-+        return true;
-+    }
-+    trace::info(_X("Did not find binded dotnet_root directory: '%s'"), dotnet_root->c_str());
-+    return false;
++    return true;
 +}
 +#endif // FEATURE_APPHOST
 +
  namespace
  {
      bool get_latest_fxr(pal::string_t fxr_root, pal::string_t* out_fxr_path)
-@@ -65,11 +113,17 @@ bool fxr_resolver::try_get_path(const pal::string_t& root_path, pal::string_t* o
+@@ -65,11 +108,27 @@ bool fxr_resolver::try_get_path(const pal::string_t& root_path, pal::string_t* o
          return true;
      }
-
+ 
 -    // For framework-dependent apps, use DOTNET_ROOT_<ARCH>
 +
      pal::string_t default_install_location;
@@ -353,7 +348,17 @@ index b59c59f10fd..56421174ae7 100644
 +    if (is_dotnet_root_enabled_for_execution(out_dotnet_root))
 +    {
 +        // For apps that using dotnetCampus.AppHost, use the EMBED_DOTNET_ROOT placeholder.
-+        trace::info(_X("Using embedded dotnet_root [%s] as runtime location."), out_dotnet_root->c_str());
++        pal::string_t absolute_path = root_path + _X("\\") + *out_dotnet_root;
++        if (pal::realpath(&absolute_path))
++        {
++            out_dotnet_root->assign(absolute_path);
++            trace::info(_X("Using embedded dotnet_root [%s] as runtime location."), out_dotnet_root->c_str());
++        }
++        else
++        {
++            trace::info(_X("embedded dotnet_root [%s] is not a valid directory."), absolute_path.c_str());
++            return false;
++        }
 +    }
 +    else if (get_dotnet_root_from_env(&dotnet_root_env_var_name, out_dotnet_root))
      {
@@ -361,6 +366,6 @@ index b59c59f10fd..56421174ae7 100644
          trace::info(_X("Using environment variable %s=[%s] as runtime location."), dotnet_root_env_var_name.c_str(), out_dotnet_root->c_str());
      }
      else
---
+-- 
 2.34.1.windows.1
 
