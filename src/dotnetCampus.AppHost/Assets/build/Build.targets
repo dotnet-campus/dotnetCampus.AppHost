@@ -29,7 +29,7 @@
 
     <PropertyGroup>
       <_DCAppHostWillBeChanged>false</_DCAppHostWillBeChanged>
-      <_DCAppHostWillBeChanged Condition="$(_DCAppHostTempTargetFile)!='' or $(AppHostCoreLibMissingDialogMessage)!='' or $(AppHostCoreLibMissingDialogUrl)!='' or $(AppHostNeedSystemPrereqsMessage)!='' or $(AppHostNeedSystemPrereqsUrl)!=''">true</_DCAppHostWillBeChanged>
+      <_DCAppHostWillBeChanged Condition="$(AppHostDotNetRoot)!='' or $(AppHostCoreLibMissingDialogMessage)!='' or $(AppHostCoreLibMissingDialogUrl)!='' or $(AppHostNeedSystemPrereqsMessage)!='' or $(AppHostNeedSystemPrereqsUrl)!=''">true</_DCAppHostWillBeChanged>
     </PropertyGroup>
 
     <Error Condition="$(_DCRuntimeIdentifier)==''" Text="项目 $(MSBuildProjectName) 没有没有指定运行时 RuntimeIdentifier，因此无法修改 AppHost。" />
