@@ -1,4 +1,4 @@
-From 90c9371fa4000cba680312f8f920286fbee4f956 Mon Sep 17 00:00:00 2001
+From d17cddde8dc6ac2460bfc44d0e9118e64babd4af Mon Sep 17 00:00:00 2001
 From: walterlv <xblero@gmail.com>
 Date: Fri, 28 Jan 2022 16:31:58 +0800
 Subject: [PATCH] Support extra placesholders: - dotnet_root -
@@ -7,8 +7,8 @@ Subject: [PATCH] Support extra placesholders: - dotnet_root -
 
 ---
  .../corehost/apphost/apphost.windows.cpp      | 240 +++++++++++++++++-
- src/native/corehost/fxr_resolver.cpp          |  63 ++++-
- 2 files changed, 287 insertions(+), 16 deletions(-)
+ src/native/corehost/fxr_resolver.cpp          |  61 ++++-
+ 2 files changed, 285 insertions(+), 16 deletions(-)
 
 diff --git a/src/native/corehost/apphost/apphost.windows.cpp b/src/native/corehost/apphost/apphost.windows.cpp
 index 7a3a94a960b..0d32e4319e8 100644
@@ -283,10 +283,10 @@ index 7a3a94a960b..0d32e4319e8 100644
          trace::verbose(_X("Showing error dialog for application: '%s' - error code: 0x%x - url: '%s'"), executable_name, error_code, url.c_str());
          if (::MessageBoxW(nullptr, dialogMsg.c_str(), executable_name, MB_ICONERROR | MB_YESNO) == IDYES)
 diff --git a/src/native/corehost/fxr_resolver.cpp b/src/native/corehost/fxr_resolver.cpp
-index b59c59f10fd..76bd49801c7 100644
+index b59c59f10fd..6ac35406d4a 100644
 --- a/src/native/corehost/fxr_resolver.cpp
 +++ b/src/native/corehost/fxr_resolver.cpp
-@@ -7,6 +7,49 @@
+@@ -7,6 +7,57 @@
  #include <trace.h>
  #include <utils.h>
  
@@ -295,7 +295,7 @@ index b59c59f10fd..76bd49801c7 100644
 +#define EMBED_DOTNET_ROOT_LO_PART_UTF8 "f2f05ca222e95084f222207c5c348eea"
 +#define EMBED_DOTNET_ROOT_FULL_UTF8    (EMBED_DOTNET_ROOT_HI_PART_UTF8 EMBED_DOTNET_ROOT_LO_PART_UTF8) // NUL terminated
 +
-+bool is_dotnet_root_enabled_for_execution(pal::string_t* dotnet_root)
++bool is_dotnet_root_enabled_for_execution(const pal::string_t& app_root_path, pal::string_t* dotnet_root)
 +{
 +    constexpr int EMBED_SZ = sizeof(EMBED_DOTNET_ROOT_FULL_UTF8) / sizeof(EMBED_DOTNET_ROOT_FULL_UTF8[0]);
 +    constexpr int EMBED_MAX = (EMBED_SZ > 1025 ? EMBED_SZ : 1025); // 1024 DLL name length, 1 NUL
@@ -329,6 +329,14 @@ index b59c59f10fd..76bd49801c7 100644
 +    }
 +
 +    trace::info(_X("The dotnet_root binding to this executable is: '%s'"), dotnet_root->c_str());
++    pal::string_t absolute_path = app_root_path + _X("\\") + *dotnet_root;
++    if (!pal::realpath(&absolute_path))
++    {
++        trace::info(_X("embedded dotnet_root [%s] is not a valid directory."), absolute_path.c_str());
++        return false;
++    }
++
++    dotnet_root->assign(absolute_path);
 +    return true;
 +}
 +#endif // FEATURE_APPHOST
@@ -336,7 +344,7 @@ index b59c59f10fd..76bd49801c7 100644
  namespace
  {
      bool get_latest_fxr(pal::string_t fxr_root, pal::string_t* out_fxr_path)
-@@ -65,11 +108,27 @@ bool fxr_resolver::try_get_path(const pal::string_t& root_path, pal::string_t* o
+@@ -65,11 +116,17 @@ bool fxr_resolver::try_get_path(const pal::string_t& root_path, pal::string_t* o
          return true;
      }
  
@@ -345,20 +353,10 @@ index b59c59f10fd..76bd49801c7 100644
      pal::string_t default_install_location;
      pal::string_t dotnet_root_env_var_name;
 -    if (get_dotnet_root_from_env(&dotnet_root_env_var_name, out_dotnet_root))
-+    if (is_dotnet_root_enabled_for_execution(out_dotnet_root))
++    if (is_dotnet_root_enabled_for_execution(root_path, out_dotnet_root))
 +    {
 +        // For apps that using dotnetCampus.AppHost, use the EMBED_DOTNET_ROOT placeholder.
-+        pal::string_t absolute_path = root_path + _X("\\") + *out_dotnet_root;
-+        if (pal::realpath(&absolute_path))
-+        {
-+            out_dotnet_root->assign(absolute_path);
-+            trace::info(_X("Using embedded dotnet_root [%s] as runtime location."), out_dotnet_root->c_str());
-+        }
-+        else
-+        {
-+            trace::info(_X("embedded dotnet_root [%s] is not a valid directory."), absolute_path.c_str());
-+            return false;
-+        }
++        trace::info(_X("Using embedded dotnet_root [%s] as runtime location."), out_dotnet_root->c_str());
 +    }
 +    else if (get_dotnet_root_from_env(&dotnet_root_env_var_name, out_dotnet_root))
      {
