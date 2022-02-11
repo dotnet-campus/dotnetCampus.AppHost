@@ -30,6 +30,7 @@
     <PropertyGroup>
       <_DCAppHostWillBeChanged>false</_DCAppHostWillBeChanged>
       <_DCAppHostWillBeChanged Condition="$(AppHostDotNetRoot)!='' or $(AppHostCoreLibMissingDialogMessage)!='' or $(AppHostCoreLibMissingDialogUrl)!='' or $(AppHostNeedSystemPrereqsMessage)!='' or $(AppHostNeedSystemPrereqsUrl)!=''">true</_DCAppHostWillBeChanged>
+      <_DCAppHostWillBeChanged Condition="$(UseAppHost)!=true">false</_DCAppHostWillBeChanged>
     </PropertyGroup>
 
     <Error Condition="$(_DCRuntimeIdentifier)==''" Text="项目 $(MSBuildProjectName) 没有没有指定运行时 RuntimeIdentifier，因此无法修改 AppHost。" />
@@ -39,7 +40,8 @@
     <Error Condition="$(AppHostNeedSystemPrereqsMessage)!='' and $(AppHostNeedSystemPrereqsUrl)==''" Text="设置了 AppHostNeedSystemPrereqsMessage 后，必须也设置 AppHostNeedSystemPrereqsUrl，因为它没有默认值。" />
     <Error Condition="$(AppHostNeedSystemPrereqsMessage)=='' and $(AppHostNeedSystemPrereqsUrl)!=''" Text="设置了 AppHostNeedSystemPrereqsUrl 后，必须也设置 AppHostNeedSystemPrereqsMessage，因为它没有默认值。" />
 
-    <Message Importance="high" Condition="$(_DCAppHostWillBeChanged)!=true" Text="项目 $(MSBuildProjectName) 没有为框架 $(TargetFramework) 和运行时 $(_DCRuntimeIdentifier) 设置任何 AppHost 相关属性，因此不会修改 AppHost。" />
+    <Message Importance="high" Condition="$(UseAppHost)!=true and $(_DCAppHostWillBeChanged)!=true" Text="项目 $(MSBuildProjectName)($(TargetFramework)) 不生成 AppHost，因此也无需修改它。" />
+    <Message Importance="high" Condition="$(UseAppHost)==true and $(_DCAppHostWillBeChanged)!=true" Text="项目 $(MSBuildProjectName) 没有为框架 $(TargetFramework) 和运行时 $(_DCRuntimeIdentifier) 设置任何 AppHost 相关属性，因此不会修改 AppHost。" />
     <Message Importance="high" Condition="$(_DCAppHostWillBeChanged)==true" Text="项目 $(MSBuildProjectName) 已为框架 $(TargetFramework) 和运行时 $(_DCRuntimeIdentifier) 设置自定义的 AppHost 属性：
 AppHostDotNetRoot                  = $(AppHostDotNetRoot) &lt;.NET 运行时路径&gt;
 AppHostCoreLibMissingDialogMessage = $(AppHostCoreLibMissingDialogMessage) &lt;.NET 运行时缺失提示&gt;
@@ -47,12 +49,12 @@ AppHostCoreLibMissingDialogUrl     = $(AppHostCoreLibMissingDialogUrl) &lt;.NET 
 AppHostNeedSystemPrereqsMessage    = $(AppHostNeedSystemPrereqsMessage) &lt;系统不支持运行 .NET 提示&gt;
 AppHostNeedSystemPrereqsUrl        = $(AppHostNeedSystemPrereqsUrl) &lt;系统不支持运行 .NET URL&gt;" />
 
-    <PropertyGroup>
+    <PropertyGroup Condition="$(_DCAppHostWillBeChanged)==true">
       <_DCAppHostSourceFile>$(_DCAppHostSourceDirectory)apphost.exe</_DCAppHostSourceFile>
       <_DCAppHostTempTargetFile>$(_DCAppHostTempTargetDirectory)apphost.exe</_DCAppHostTempTargetFile>
     </PropertyGroup>
 
-    <ItemGroup>
+    <ItemGroup Condition="$(_DCAppHostWillBeChanged)==true">
       <_DCAppHostOptionLine Include=">" />
       <_DCAppHostOptionLine Include="AppHostFile" />
       <_DCAppHostOptionLine Include="$(_DCAppHostTempTargetFile)" />
@@ -74,7 +76,7 @@ AppHostNeedSystemPrereqsUrl        = $(AppHostNeedSystemPrereqsUrl) &lt;系统�
       <_DCAppHostOptionLine Include=">" />
     </ItemGroup>
 
-    <WriteLinesToFile File="$(_DCAppHostOptionFilePath)" Lines="@(_DCAppHostOptionLine)" Overwrite="True" />
+    <WriteLinesToFile Condition="$(_DCAppHostWillBeChanged)==true" File="$(_DCAppHostOptionFilePath)" Lines="@(_DCAppHostOptionLine)" Overwrite="True" />
 
     <Copy Condition="$(_DCAppHostWillBeChanged)==true" SourceFiles="$(_DCAppHostSourceFile)" DestinationFiles="$(_DCAppHostTempTargetFile)" />
     <Exec Condition="$(_DCAppHostWillBeChanged)==true" Command="$(_DCAppHostPatcherTool) --options $(_DCAppHostOptionFilePath)"
