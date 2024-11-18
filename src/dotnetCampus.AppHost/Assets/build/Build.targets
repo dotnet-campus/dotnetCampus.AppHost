@@ -10,9 +10,11 @@
     <!-- 暂时还没有支持 net5.0。 -->
     <!--<_DCTargetFramework Condition="'$(TargetFramework)'=='net5.0'">net5.0</_DCTargetFramework>-->
     <!--<_DCTargetFramework Condition="'$(TargetFramework)'=='net5.0-windows'">net5.0</_DCTargetFramework>-->
+    <CreateCustomAppHostDependsOn>_ChooseAppHost</CreateCustomAppHostDependsOn>
+    <CreateCustomAppHostDependsOn Condition="$([MSBuild]::VersionGreaterThanOrEquals($(NETCoreSdkVersion), 9.0))">_GetAppHostPaths</CreateCustomAppHostDependsOn>
   </PropertyGroup>
 
-  <Target Name="CreateCustomAppHost" BeforeTargets="_CreateAppHost" DependsOnTargets="_ChooseAppHost">
+  <Target Name="CreateCustomAppHost" BeforeTargets="_CreateAppHost" DependsOnTargets="$(CreateCustomAppHostDependsOn)">
 
     <PropertyGroup>
       <_DCAppHostRoot>$(MSBuildThisFileDirectory)..\</_DCAppHostRoot>

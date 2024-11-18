@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net6.0;net5.0;netstandard2.0;net45</TargetFrameworks>
+    <TargetFrameworks>net8.0;net6.0;netstandard2.0;net45</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <RootNamespace>dotnetCampus.AppHosting</RootNamespace>
@@ -30,13 +30,17 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
     <PackageReference Include="dotnetCampus.CommandLine.Source" Version="3.3.0" PrivateAssets="All" />
     <PackageReference Include="dotnetCampus.Configurations.Source" Version="1.6.8" PrivateAssets="All" />
     <PackageReference Include="dotnetCampus.MSBuildUtils.Source" Version="1.1.0" PrivateAssets="All" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' != 'net6.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net45'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != 'net8.0'">
     <Compile Remove="**\*.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>

@@ -1,4 +1,4 @@
-﻿#if !NET6_0
+﻿#if !NET8_0
 internal static class Program
 {
     private static void Main()
