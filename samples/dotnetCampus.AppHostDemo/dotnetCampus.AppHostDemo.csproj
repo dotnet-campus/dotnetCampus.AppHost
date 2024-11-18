@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFrameworks>net6.0-windows;net45</TargetFrameworks>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <IsPackable>false</IsPackable>
@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <DCAppHostPatcherToolPath>$(MSBuildProjectDirectory)\..\..\src\dotnetCampus.AppHost\bin\$(Configuration)\net6.0\dotnetCampus.AppHost.dll</DCAppHostPatcherToolPath>
+    <DCAppHostPatcherToolPath>$(MSBuildProjectDirectory)\..\..\src\dotnetCampus.AppHost\bin\$(Configuration)\net8.0\dotnetCampus.AppHost.dll</DCAppHostPatcherToolPath>
   </PropertyGroup>
 
   <ItemGroup>
