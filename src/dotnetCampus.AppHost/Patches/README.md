@@ -1,4 +1,4 @@
-# .NET Runtime 仓库补丁说明
+﻿# .NET Runtime 仓库补丁说明
 
 ## AppHost.exe 编译方法
 
